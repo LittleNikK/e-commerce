@@ -133,13 +133,18 @@ export async function getProductById(id: string): Promise<Product | null> {
 }
 
 export async function getFeaturedProducts(limit = 8): Promise<Product[]> {
-  const db = await getDb();
-  const docs = await db.collection('products')
-    .find({ status: 'published', isFeatured: true, stock: { $gt: 0 } })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .toArray();
-  return docs.map(mapProduct);
+  try {
+    const db = await getDb();
+    const docs = await db.collection('products')
+      .find({ status: 'published', isFeatured: true, stock: { $gt: 0 } })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray();
+    return docs.map(mapProduct);
+  } catch (err) {
+    console.warn('Failed to fetch featured products:', err);
+    return [];
+  }
 }
 
 export async function getRelatedProducts(productId: string, category: string, limit = 4): Promise<Product[]> {

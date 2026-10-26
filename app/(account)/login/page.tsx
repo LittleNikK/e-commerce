@@ -30,6 +30,8 @@ export default function LoginPage() {
     }
   };
 
+  const [seeding, setSeeding] = useState(false);
+
   const handleAutofillDemo = (demoType: 'admin' | 'customer') => {
     if (demoType === 'admin') {
       setEmail('admin@secondstory.com');
@@ -37,6 +39,24 @@ export default function LoginPage() {
     } else {
       setEmail('customer@secondstory.com');
       setPassword('Customer@123456');
+    }
+  };
+
+  const handleSeedDemo = async () => {
+    setSeeding(true);
+    try {
+      const res = await fetch('/api/seed', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        success('Demo accounts and 25 vintage pieces created!');
+        handleAutofillDemo('admin');
+      } else {
+        error(data.hint || data.error || 'Failed to seed database');
+      }
+    } catch (err: any) {
+      error(err?.message || 'Failed to seed database');
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -57,9 +77,19 @@ export default function LoginPage() {
 
         {/* Quick Demo Credentials for Reviewers */}
         <div className="p-3 bg-[#FAF7F2] border border-[#E8E2D8] rounded-sm text-xs space-y-2">
-          <div className="flex items-center gap-1.5 font-semibold text-[#1A1816] text-[11px] uppercase tracking-wider">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#3D4A3C]" />
-            <span>Instant Demo Logins</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 font-semibold text-[#1A1816] text-[11px] uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#3D4A3C]" />
+              <span>Instant Demo Logins</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleSeedDemo}
+              disabled={seeding}
+              className="text-[10px] text-[#A34E36] hover:underline font-semibold disabled:opacity-50"
+            >
+              {seeding ? 'Seeding...' : 'Seed Database'}
+            </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button

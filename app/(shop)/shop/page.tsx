@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { getProducts } from '@/lib/services/product.service';
 import ProductCard from '@/components/products/ProductCard';
+import DatabaseEmptyNotice from '@/components/home/DatabaseEmptyNotice';
 import { Filter, SlidersHorizontal, RotateCcw, Search } from 'lucide-react';
 
 interface ShopPageProps {
@@ -28,17 +29,28 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const page = Number(params.page) || 1;
   const collection = params.collection || undefined;
 
-  const { products, pagination } = await getProducts({
-    category,
-    condition,
-    size,
-    sort,
-    q,
-    inStockOnly,
-    page,
-    collection,
-    limit: 16,
-  });
+  let products: any[] = [];
+  let pagination = { page: 1, limit: 16, totalCount: 0, totalPages: 0, hasMore: false };
+  let dbError: string | null = null;
+
+  try {
+    const res = await getProducts({
+      category,
+      condition,
+      size,
+      sort,
+      q,
+      inStockOnly,
+      page,
+      collection,
+      limit: 16,
+    });
+    products = res.products;
+    pagination = res.pagination;
+  } catch (err: any) {
+    console.error('ShopPage getProducts error:', err);
+    dbError = err?.message || 'Database query error';
+  }
 
   const categories = [
     { label: 'All Archive', value: '' },
@@ -308,23 +320,27 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
             {/* Products Grid */}
             {products.length === 0 ? (
-              <div className="bg-white border border-[#E8E2D8] p-12 text-center rounded-sm space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-full bg-[#FAF7F2] border border-[#E8E2D8] flex items-center justify-center text-stone-400">
-                  <Search className="w-6 h-6" />
+              !hasActiveFilters ? (
+                <DatabaseEmptyNotice error={dbError} />
+              ) : (
+                <div className="bg-white border border-[#E8E2D8] p-12 text-center rounded-sm space-y-4">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FAF7F2] border border-[#E8E2D8] flex items-center justify-center text-stone-400">
+                    <Search className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-serif-editorial text-2xl text-[#1A1816]">No matching vintage pieces found</h3>
+                  <p className="text-xs text-[#7A7268] max-w-md mx-auto leading-relaxed">
+                    We frequently curate new archive drops from collector estates. Try clearing one or more filters or browse all vintage tees.
+                  </p>
+                  <div className="pt-2">
+                    <Link
+                      href="/shop"
+                      className="inline-flex items-center justify-center px-6 py-2.5 bg-[#1A1816] text-[#FAF7F2] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#3D4A3C] transition"
+                    >
+                      View All Garments
+                    </Link>
+                  </div>
                 </div>
-                <h3 className="font-serif-editorial text-2xl text-[#1A1816]">No matching vintage pieces found</h3>
-                <p className="text-xs text-[#7A7268] max-w-md mx-auto leading-relaxed">
-                  We frequently curate new archive drops from collector estates. Try clearing one or more filters or browse all vintage tees.
-                </p>
-                <div className="pt-2">
-                  <Link
-                    href="/shop"
-                    className="inline-flex items-center justify-center px-6 py-2.5 bg-[#1A1816] text-[#FAF7F2] text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-[#3D4A3C] transition"
-                  >
-                    View All Garments
-                  </Link>
-                </div>
-              </div>
+              )
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.map(product => (

@@ -20,6 +20,13 @@ export async function POST(request: Request) {
 
     const user = await db.collection('users').findOne({ email: email.toLowerCase() });
     if (!user || !user.passwordHash) {
+      const totalUsers = await db.collection('users').countDocuments().catch(() => 0);
+      if (totalUsers === 0) {
+        return NextResponse.json(
+          { error: 'Database is empty. Please visit /api/seed or click "Initialize Demo Accounts".' },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
         { error: 'Invalid email or password.' },
         { status: 401 }
@@ -65,8 +72,16 @@ export async function POST(request: Request) {
     });
 
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const isConnError = error?.name === 'MongoServerSelectionError' || error?.message?.includes('ECONNREFUSED');
+    return NextResponse.json(
+      {
+        error: isConnError
+          ? 'Database connection failed. On Vercel, ensure MONGODB_URI is set to a cloud MongoDB Atlas instance.'
+          : 'Internal server error',
+      },
+      { status: 500 }
+    );
   }
 }

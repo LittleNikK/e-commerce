@@ -6,34 +6,50 @@ declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-const uri = env.MONGODB_URI;
 const options = {
   maxPoolSize: 10,
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 8000,
   connectTimeoutMS: 10000,
 };
 
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
+function getMongoUri(): string {
+  return process.env.MONGODB_URI || env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
+}
 
-if (process.env.NODE_ENV === 'development') {
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    global._mongoClientPromise = client.connect();
-  }
-  clientPromise = global._mongoClientPromise;
-} else {
-  client = new MongoClient(uri, options);
-  clientPromise = client.connect();
+function getDatabaseName(): string {
+  return process.env.MONGODB_DB_NAME || env.MONGODB_DB_NAME || 'second_story';
 }
 
 export async function getMongoClient(): Promise<MongoClient> {
-  return clientPromise;
+  const uri = getMongoUri();
+
+  if (process.env.NODE_ENV === 'development') {
+    if (!global._mongoClientPromise) {
+      const client = new MongoClient(uri, options);
+      global._mongoClientPromise = client.connect().catch(err => {
+        global._mongoClientPromise = undefined;
+        throw err;
+      });
+    }
+    return global._mongoClientPromise;
+  }
+
+  // Production: connect lazily per request/lambda instance with auto-retry
+  if (!global._mongoClientPromise) {
+    const client = new MongoClient(uri, options);
+    global._mongoClientPromise = client.connect().catch(err => {
+      global._mongoClientPromise = undefined;
+      throw err;
+    });
+  }
+
+  return global._mongoClientPromise;
 }
 
-export async function getDb(dbName: string = env.MONGODB_DB_NAME): Promise<Db> {
+export async function getDb(dbName?: string): Promise<Db> {
+  const targetDb = dbName || getDatabaseName();
   const client = await getMongoClient();
-  return client.db(dbName);
+  return client.db(targetDb);
 }
 
-export default clientPromise;
+export default getMongoClient;
