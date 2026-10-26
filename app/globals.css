@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-cream: #FAF7F2;
+    --bg-surface: #FFFFFF;
+    --bg-card: #F5F0E8;
+    --bg-muted: #EDE7DD;
+    --text-primary: #1A1816;
+    --text-secondary: #5C564E;
+    --text-muted: #8E877D;
+    --accent-olive: #3D4A3C;
+    --accent-olive-hover: #2F3B2E;
+    --accent-rust: #A34E36;
+    --accent-rust-hover: #8C402B;
+    --accent-sand: #C99E68;
+    --border-subtle: #E8E2D8;
+    --border-strong: #D5CCC0;
+  }
+
+  body {
+    background-color: var(--bg-cream);
+    color: var(--text-primary);
+    font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, .font-serif-editorial {
+    font-family: var(--font-serif), Georgia, Cambria, "Times New Roman", Times, serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF7F2;
+}
+::-webkit-scrollbar-thumb {
+  background: #D5CCC0;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8E877D;
+}
+
+/* Editorial utility classes */
+.editorial-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+}
+
+.vintage-pill-new {
+  background: #EBF3EA;
+  color: #2F4A2C;
+  border-color: #CDE2CA;
+}
+
+.vintage-pill-excellent {
+  background: #F4EFEB;
+  color: #3D4A3C;
+  border-color: #DFD5C9;
+}
+
+.vintage-pill-verygood {
+  background: #F8F3E6;
+  color: #7A5722;
+  border-color: #EBDCBD;
+}
+
+.vintage-pill-good {
+  background: #F9ECE6;
+  color: #8C402B;
+  border-color: #EFCFC2;
+}
+
+.vintage-pill-fair {
+  background: #F1ECE6;
+  color: #615951;
+  border-color: #DDD4CA;
+}
+
+/* Editorial selection */
+::selection {
+  background-color: #3D4A3C;
+  color: #FAF7F2;
+}
+
+/* Subtle image zoom on hover */
+.img-zoom-hover {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .img-zoom-hover {
+  transform: scale(1.04);
+}
