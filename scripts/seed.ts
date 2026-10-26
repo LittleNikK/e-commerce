@@ -1,16 +1,18 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
-const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || 'second_story';
+import { ensureIndexes } from '../lib/db/indexes';
 
-async function seed() {
+export async function seedDatabase(customUri?: string, customDb?: string) {
+  const uri = customUri || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
+  const dbName = customDb || process.env.MONGODB_DB_NAME || 'second_story';
+
   console.log('--- SECOND STORY DATABASE SEED ---');
-  console.log(`Connecting to: ${MONGODB_URI}/${MONGODB_DB_NAME}`);
+  console.log(`Connecting to: ${uri}/${dbName}`);
 
-  const client = new MongoClient(MONGODB_URI);
+  const client = new MongoClient(uri);
   await client.connect();
-  const db = client.db(MONGODB_DB_NAME);
+  const db = client.db(dbName);
 
   // Clear existing collections safely
   console.log('Clearing existing records...');
@@ -1263,6 +1265,13 @@ async function seed() {
     { email: 'archivefashion@outlook.com', subscribedAt: now, active: true },
   ]);
 
+  console.log('Creating database indexes...');
+  try {
+    await ensureIndexes();
+  } catch (idxErr) {
+    console.warn('Index notice:', idxErr);
+  }
+
   console.log('✓ SEED COMPLETED SUCCESSFULLY!');
   console.log('==============================================');
   console.log('Admin Login:    admin@secondstory.com / Admin@123456');
@@ -1270,9 +1279,20 @@ async function seed() {
   console.log('==============================================');
 
   await client.close();
+
+  return {
+    success: true,
+    message: 'Database seeded successfully',
+    usersCount: 2,
+    productsCount: 25,
+    collectionsCount: 5,
+    discountsCount: 3,
+  };
 }
 
-seed().catch(err => {
-  console.error('Seed error:', err);
-  process.exit(1);
-});
+if (process.argv[1]?.includes('seed.ts')) {
+  seedDatabase().catch(err => {
+    console.error('Seed error:', err);
+    process.exit(1);
+  });
+}
